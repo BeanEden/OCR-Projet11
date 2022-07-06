@@ -13,12 +13,16 @@ def loadCompetitions():
          listOfCompetitions = json.load(comps)['competitions']
          return listOfCompetitions
 
+    with open(jsnfile, 'w') as cw:
+        json.dump(cars, cw)
+
 
 app = Flask(__name__)
 app.secret_key = 'something_special'
 
 competitions = loadCompetitions()
 clubs = loadClubs()
+
 
 @app.route('/')
 def index(error_message="False"):
@@ -53,9 +57,11 @@ def purchasePlaces():
     if placesRequired > int(club['points']):
         error_message = "You don't have enough points to make this reservation"
         return render_template('booking.html', club=club, competition=competition, error_message=error_message)
-    else :
+    else:
         competition['numberOfPlaces'] = int(competition['numberOfPlaces'])-placesRequired
         club['points'] = int(club['points'])-placesRequired
+        with open('clubs.json',"w") as c:
+            json.dump(club, c)
         flash('Great-booking complete!')
         return render_template('welcome.html', club=club, competitions=competitions)
 
