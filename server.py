@@ -13,9 +13,6 @@ def loadCompetitions():
          listOfCompetitions = json.load(comps)['competitions']
          return listOfCompetitions
 
-    with open(jsnfile, 'w') as cw:
-        json.dump(cars, cw)
-
 
 app = Flask(__name__)
 app.secret_key = 'something_special'
@@ -61,7 +58,8 @@ def purchasePlaces():
         competition['numberOfPlaces'] = int(competition['numberOfPlaces'])-placesRequired
         club['points'] = int(club['points'])-placesRequired
         with open('clubs.json',"w") as c:
-            json.dump(club, c)
+            data = {'clubs': clubs}
+            json.dump(data, c)
         flash('Great-booking complete!')
         return render_template('welcome.html', club=club, competitions=competitions)
 
