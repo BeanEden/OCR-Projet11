@@ -60,6 +60,9 @@ def purchasePlaces():
         with open('clubs.json',"w") as c:
             data = {'clubs': clubs}
             json.dump(data, c)
+        with open('competitions.json', "w") as cr:
+            data = {'competitions': competitions}
+            json.dump(data, cr)
         flash('Great-booking complete!')
         return render_template('welcome.html', club=club, competitions=competitions)
 
