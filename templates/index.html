@@ -12,5 +12,8 @@
         <input type="email" name="email" id=""/>
         <button type="submit">Enter</button>
     </form>
+{% if error_message != "False": %}
+    <p>{{error_message}}</p>
+    {%endif%}
 </body>
 </html>
