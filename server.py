@@ -70,15 +70,19 @@ def updatePlacesBookedOrCreate(competition, club, places):
         count=0
         for i in competition['clubsParticipating']:
             if club['name'] == i['club']:
-                i['placesBooked'] = places
                 count += 1
+                if places == 0 :
+                    index_to_delete = competition['clubsParticipating'].index(i)
+                    del competition['clubsParticipating'][index_to_delete]
+                else :
+                    i['placesBooked'] = places
         if count == 0:
             competition["clubsParticipating"].append(
                 {'club': club['name'], 'placesBooked': places})
-        return competition
     else:
-        competition["clubsParticipating"].append({'club': club['name'], 'placesBooked': places})
-        return competition
+        if places > 0:
+            competition["clubsParticipating"].append({'club': club['name'], 'placesBooked': places})
+    return competition
 
 
 @app.route('/')
@@ -119,30 +123,13 @@ def purchasePlaces():
     placesAlreadyBooked = loadPlacesAlreadyBooked(competition, club)
     placesRequired = int(request.form['places'])
     totalPlacesBooked = placesAlreadyBooked+placesRequired
-    bookingMax = bookingLimit(competition, club, placesAlreadyBooked)
-    if placesRequired > int(club['points']):
-        error_message = "You don't have enough points to make this reservation"
-        return render_template('booking.html',
-                               club=club,
-                               competition=competition,
-                               error_message=error_message,
-                               booking_max = bookingMax)
-    elif totalPlacesBooked > 12:
-        error_message = "You can't book more than 12 places for an event"
-        return render_template('booking.html',
-                               club=club,
-                               competition=competition,
-                               placesAlreadyBooked=placesAlreadyBooked,
-                               booking_max = bookingMax,
-                               error_message=error_message)
-    else:
-        competition['numberOfPlaces'] = int(competition['numberOfPlaces'])-placesRequired
-        competition = updatePlacesBookedOrCreate(competition, club, totalPlacesBooked)
-        club['points'] = int(club['points'])-placesRequired
-        club_db = updateDB(club_file, {"clubs":clubs})
-        competition_db = updateDB(competition_file, {"competitions":competitions})
-        flash('Great-booking complete!')
-        return render_template('welcome.html', club=club, competitions=competitions)
+    competition['numberOfPlaces'] = int(competition['numberOfPlaces'])-placesRequired
+    competition = updatePlacesBookedOrCreate(competition, club, totalPlacesBooked)
+    club['points'] = int(club['points'])-placesRequired
+    club_db = updateDB(club_file, {"clubs":clubs})
+    competition_db = updateDB(competition_file, {"competitions":competitions})
+    flash('Great-booking complete!')
+    return render_template('welcome.html', club=club, competitions=competitions)
 
 
 
