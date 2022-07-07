@@ -1,4 +1,5 @@
 import json
+import datetime
 from flask import Flask,render_template,request,redirect,flash,url_for
 
 
@@ -9,14 +10,6 @@ club_file ='clubs.json'
 app = Flask(__name__)
 app.secret_key = 'something_special'
 
-# def loadClubs():
-#     with open(club_file) as c:
-#          listOfClubs = json.load(c)['clubs']
-#          return listOfClubs
-# def loadCompetitions():
-#     with open(competition_file) as comps:
-#          listOfCompetitions = json.load(comps)['competitions']
-#          return listOfCompetitions
 
 def loadDB(db_file, name):
     with open(db_file) as c:
@@ -27,31 +20,26 @@ def loadDB(db_file, name):
 competitions = loadDB(competition_file, 'competitions')
 clubs = loadDB(club_file, 'clubs')
 
-# def updateClubsDB():
-#     with open(club_file, "w") as c:
-#         data = {'clubs': clubs}
-#         json.dump(data, c)
-#
-# def updateCompetitionDB():
-#     with open('competitions.json', "w") as cr:
-#         data = {'competitions': competitions}
-#         json.dump(data, cr)
-
 
 def updateDB(db_file, data_dict):
     with open(db_file, "w") as c:
         json.dump(data_dict, c)
 
 
-
 def loadPlacesAlreadyBooked(competition, club):
     if len(competition['clubsParticipating']) > 0:
+        count = 0
         for i in competition['clubsParticipating']:
             if club['name'] == i['club']:
+                count += 1
                 return int(i['placesBooked'])
+        if count == 0:
+            return 0
     else:
         return 0
 
+def datetime_check():
+    pass
 
 def updatePlacesBookedOrCreate(competition, club, places):
     if len(competition['clubsParticipating']) > 0:
