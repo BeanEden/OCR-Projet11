@@ -7,11 +7,12 @@
 <body>
     <h2>{{competition['name']}}</h2>
     Places available: {{competition['numberOfPlaces']}}<br>
-    Points available: {{club['points']}}
+    Points available: {{club['points']}}<br>
+    Places already booked : {{placesAlreadyBooked}} /12<br>
     <form action="/purchasePlaces" method="post">
         <input type="hidden" name="club" value="{{club['name']}}">
         <input type="hidden" name="competition" value="{{competition['name']}}">
-        <label for="places">How many places?</label><input type="number" name="places" id="" max="12"/>
+        <label for="places">How many places?</label><input type="number" name="places" id="" min="-{{placesAlreadyBooked}}" max="12"/>
         <button type="submit">Book</button>
     </form>
     {% if error_message : %}
