@@ -17,7 +17,7 @@ def loadDB(db_file, name):
          return db_list
 
 
-competitions = loadDB(competition_file, 'competitions')
+competitions = sorted(loadDB(competition_file, 'competitions'), key=lambda item: item['date'], reverse=True)
 clubs = loadDB(club_file, 'clubs')
 
 
@@ -38,8 +38,32 @@ def loadPlacesAlreadyBooked(competition, club):
     else:
         return 0
 
-def datetime_check():
-    pass
+
+def datetime_check(competition):
+    today = date_str_split(str(datetime.datetime.now()))
+    competition_date = date_str_split(competition['date'])
+
+    if int(today) < int(competition_date):
+        competition['status'] = 'open'
+    else:
+        competition['status'] = 'closed'
+    return competition
+
+
+def date_str_split(date):
+    days = date[:10].replace("-","")
+    hours = date[11:16].replace(":","")
+    date = days+hours
+    return str(date)
+
+
+def bookingLimit(competition, club, already_booked):
+    listed = []
+    listed.append(int(competition['numberOfPlaces']))
+    listed.append(int(club['points']))
+    listed.append(12-int(already_booked))
+    return min(listed)
+
 
 def updatePlacesBookedOrCreate(competition, club, places):
     if len(competition['clubsParticipating']) > 0:
@@ -66,6 +90,8 @@ def index(error_message="False"):
 def showSummary():
     try:
         club = [club for club in clubs if club['email'] == request.form['email']][0]
+        for i in competitions:
+            i = datetime_check(i)
     except IndexError:
         return index(error_message="Sorry, that email wasn't found.")
     return render_template('welcome.html', club=club, competitions=competitions)
@@ -77,7 +103,9 @@ def book(competition, club):
     foundCompetition = [c for c in competitions if c['name'] == competition][0]
     if foundClub and foundCompetition:
         placesAlreadyBooked = loadPlacesAlreadyBooked(foundCompetition, foundClub)
-        return render_template('booking.html',club=foundClub,competition=foundCompetition, placesAlreadyBooked=placesAlreadyBooked)
+        bookingMax = bookingLimit(foundCompetition, foundClub, placesAlreadyBooked)
+        return render_template('booking.html',club=foundClub, competition=foundCompetition, placesAlreadyBooked=placesAlreadyBooked,
+                               booking_max=bookingMax)
     else:
         flash("Something went wrong-please try again")
         return render_template('welcome.html', club=club, competitions=competitions)
@@ -87,15 +115,25 @@ def book(competition, club):
 def purchasePlaces():
     competition = [c for c in competitions if c['name'] == request.form['competition']][0]
     club = [c for c in clubs if c['name'] == request.form['club']][0]
+    competition = datetime_check(competition)
     placesAlreadyBooked = loadPlacesAlreadyBooked(competition, club)
     placesRequired = int(request.form['places'])
     totalPlacesBooked = placesAlreadyBooked+placesRequired
+    bookingMax = bookingLimit(competition, club, placesAlreadyBooked)
     if placesRequired > int(club['points']):
         error_message = "You don't have enough points to make this reservation"
-        return render_template('booking.html', club=club, competition=competition, error_message=error_message)
+        return render_template('booking.html',
+                               club=club,
+                               competition=competition,
+                               error_message=error_message,
+                               booking_max = bookingMax)
     elif totalPlacesBooked > 12:
         error_message = "You can't book more than 12 places for an event"
-        return render_template('booking.html', club=club, competition=competition, placesAlreadyBooked=placesAlreadyBooked,
+        return render_template('booking.html',
+                               club=club,
+                               competition=competition,
+                               placesAlreadyBooked=placesAlreadyBooked,
+                               booking_max = bookingMax,
                                error_message=error_message)
     else:
         competition['numberOfPlaces'] = int(competition['numberOfPlaces'])-placesRequired
@@ -105,6 +143,12 @@ def purchasePlaces():
         competition_db = updateDB(competition_file, {"competitions":competitions})
         flash('Great-booking complete!')
         return render_template('welcome.html', club=club, competitions=competitions)
+
+
+
+
+
+
 
 
 # TODO: Add route for points display

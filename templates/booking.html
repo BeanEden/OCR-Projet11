@@ -9,14 +9,29 @@
     Places available: {{competition['numberOfPlaces']}}<br>
     Points available: {{club['points']}}<br>
     Places already booked : {{placesAlreadyBooked}} /12<br>
+    <br>
     <form action="/purchasePlaces" method="post">
         <input type="hidden" name="club" value="{{club['name']}}">
         <input type="hidden" name="competition" value="{{competition['name']}}">
-        <label for="places">How many places?</label><input type="number" name="places" id="" min="-{{placesAlreadyBooked}}" max="12"/>
+        <label for="places">How many places?</label><input type="number" name="places" id="" min="-{{placesAlreadyBooked}}" max="{{booking_max}}"/>
         <button type="submit">Book</button>
     </form>
     {% if error_message : %}
     <p>{{error_message}}</p>
     {%endif%}
+        <hr />
+    Clubs participants :
+    <table border="1">
+     <tr>
+        <td>Club</td>
+         <td>Places</td>
+    </tr>
+        {% for i in competition['clubsParticipating'] :%}
+        <tr>
+            <td>{{i['club']}}</td>
+            <td>{{i['placesBooked']}}</td>
+        </tr>
+        {% endfor %}
+    </table>
 </body>
 </html>
